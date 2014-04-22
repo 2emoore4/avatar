@@ -1,15 +1,19 @@
-
-#define LED_PIN 13
-
-void setup()
-{
-    pinMode(LED_PIN, OUTPUT);
+void setup() {
+    Serial.begin(9600);
 }
 
-void loop()
-{
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(900);
+char incoming_char = -1;
+int timer;
+
+void loop() {
+    if (Serial.available() > 0) {
+        incoming_char = Serial.read();
+
+        switch (incoming_char) {
+        case 'c':
+            delay(5);
+            Serial.print("y");
+            break;
+        }
+    }
 }
