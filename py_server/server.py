@@ -1,13 +1,30 @@
 import os
 import serial
-import zmq
-from serial.tools import list_ports
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
 
-# Initializing ZeroMQ server
-print("Initializing ZeroMQ server")
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://127.0.0.1:5000")
+from serial.tools import list_ports
+from tornado.options import define, options, parse_command_line
+
+# add command line option for port number
+define("port", default=8080, help="run on the given port", type=int)
+
+# response handler for http requests
+class IndexHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.write("response")
+        self.finish()
+
+# response handler for web sockets
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    def on_message(self, message):
+        print("received a message: %s" % (message))
+
+app = tornado.web.Application([
+    (r'/', WebSocketHandler),
+])
 
 # Provides all serial port names as strings
 def serial_ports():
@@ -39,14 +56,9 @@ for port in list(serial_ports()):
 print("Done. Ready to receive messages.")
 
 def main():
-    # Main loop
-    while True:
-        # Check for incoming message.
-        msg = socket.recv()
-        print("Received message: " + msg)
-
-        # Send back message to confirm receipt.
-        socket.send(msg)
+    parse_command_line()
+    app.listen(options.port)
+    tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":
     main()
