@@ -11,6 +11,7 @@
         avg = <span id="avg">avg</span><br>
         max = <span id="max">max</span><br>
         min = <span id="min">min</span><br>
+        peaks = <span id="peaks">peaks</span><br>
         <button id="start_speech">start speech</button><button id="stop_speech">stop speech</button><br>
         text = <span id="text">text</span>
         <script>
@@ -98,11 +99,12 @@
             };
 
             // calculates important stats from volume array
-            var max, min, avg;
+            var max, min, avg, peaks;
             var analysetimedomain = function() {
                 var sum = 0;
                 min = Number.MAX_VALUE;
                 max = -Number.MAX_VALUE;
+                peaks = 0;
 
                 for (i = 0; i < timespectrum.length; i++) {
                     sum += timespectrum[i];
@@ -117,9 +119,17 @@
                 }
 
                 avg = sum / timespectrum.length;
+
+                for (i = 0; i < timespectrum.length; i++) {
+                    if (timespectrum[i] > (max - min) * 0.9 + min) {
+                        peaks++;
+                    }
+                }
+
                 document.getElementById("avg").innerText = avg;
                 document.getElementById("max").innerText = max;
                 document.getElementById("min").innerText = min;
+                document.getElementById("peaks").innerText = peaks;
             };
 
             // linear interpolation
