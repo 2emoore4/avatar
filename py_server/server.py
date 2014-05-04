@@ -1,3 +1,4 @@
+import json
 import os
 import serial
 import tornado.ioloop
@@ -7,20 +8,35 @@ import tornado.websocket
 from serial.tools import list_ports
 from tornado.options import define, options, parse_command_line
 
+next_user_id = 0
+
 # add command line option for port number
 define("port", default=8080, help="run on the given port", type=int)
-
-# response handler for http requests
-class IndexHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
-    def get(self):
-        self.write("response")
-        self.finish()
 
 # response handler for web sockets
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
+        obj = json.loads(message)
+        m_type = obj["type"]
+        m_text = obj["message"]
+        m_uid = obj["uid"]
+
+        if m_type == "request":
+            self.handle_request(m_text)
+        elif m_type == "report":
+            self.handle_report(m_text)
+
         print("received a message: %s" % (message))
+
+    def handle_request(self, m_text):
+        global next_user_id
+        if m_text == "userid":
+            self.write_message(json.dumps({'type': 'assign_uid', 'data': next_user_id}))
+            next_user_id += 1
+            print "user id request"
+
+    def handle_report(self, m_text):
+        print "stuff"
 
 app = tornado.web.Application([
     (r'/', WebSocketHandler),
