@@ -12,10 +12,14 @@ void setup() {
 
 void loop() {
   Serial.println(pwm_val);
-  Timer1.pwm(PIN_PWM, pwm_val);
+  set_pump(pwm_val);
   delay(10);
 
-  pwm_val += 1;
+  pwm_val += 8;
   if (pwm_val == 1024)
     pwm_val = 0;
+}
+
+void set_pump(int pwm_val) {
+  Timer1.pwm(PIN_PWM, pwm_val);
 }
