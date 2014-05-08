@@ -37,7 +37,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         print("received a message: %s" % (message))
         obj = json.loads(message)
-        data_queue.put(data_queue)
+        data_queue.put(obj)
 
 app = tornado.web.Application([
     (r'/', WebSocketHandler),
