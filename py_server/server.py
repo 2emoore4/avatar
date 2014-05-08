@@ -36,51 +36,76 @@ arduino_serial = None
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         print("received a message: {}".format(message))
-        obj = json.loads(message)
-
-        # wait until all data has been read
-        while not data_queue.empty():
-            pass
-
-        data_queue.put(obj)
+        try:
+            obj = json.loads(message)
+        except ValueError:
+            print "INVALID JSON. SKIPPING."
+            return
+        state = process_data(obj)
+        # write_to_arduino(state)
 
 app = tornado.web.Application([
     (r'/', WebSocketHandler),
 ])
 
 
-def process_data():
-    print "process_data started"
-    while True:
-        # wait until all states have been written
-        if not arduino_state.empty():
-            continue
+# process new data
+# output a new state
+def process_data(newdata):
+    print("processing new data: {}".format(newdata))
+    dtype = newdata['type']
+    dval = newdata['value']
 
-        # block on new data
-        newdata = data_queue.get()
-        print("processing new data: {}".format(newdata))
-        dtype = newdata['type']
-        dval = newdata['value']
+    pump_power = 0
 
-        pump_power = 0
+    if newdata['type'] == 'audio-volume':
+        baseline = -160
+        max_delta = 30
+        pump_power = (dval - baseline) / max_delta
 
-        if newdata['type'] == 'audio-volume':
-            baseline = -160
-            max_delta = 30
-            pump_power = (dval - baseline) / max_delta
+    return (pump_power,)
 
-        state = (pump_power,)
-        arduino_state.put(state)
+# take a state and write it to the arduino
+def write_to_arduino(state):
+    print("writing to arduino", state)
+    arduino_serial.flushInput()
+    if arduino_serial != None:
+        for val in state:
+            arduino_serial.write(convert_float_letter(val))
 
-def write_to_arduino():
-    print "write_to_arduino started"
-    while True:
-        # block on new data
-        state = arduino_state.get()
-        print("writing to arduino", state)
-        if arduino_serial != None:
-            for val in state:
-                arduino_serial.write(convert_float_letter(val))
+
+# def process_data_thread():
+#     print "process_data started"
+#     while True:
+#         # wait until all states have been written
+#         if not arduino_state.empty():
+#             continue
+
+#         # block on new data
+#         newdata = data_queue.get()
+#         print("processing new data: {}".format(newdata))
+#         dtype = newdata['type']
+#         dval = newdata['value']
+
+#         pump_power = 0
+
+#         if newdata['type'] == 'audio-volume':
+#             baseline = -160
+#             max_delta = 30
+#             pump_power = (dval - baseline) / max_delta
+
+#         state = (pump_power,)
+#         arduino_state.put(state)
+
+# def write_to_arduino_thread():
+#     print "write_to_arduino started"
+#     while True:
+#         # block on new data
+#         state = arduino_state.get()
+#         print("writing to arduino", state)
+#         if arduino_serial != None:
+#             for val in state:
+#                 arduino_serial.write(convert_float_letter(val))
 
 
 # convert a float to a letter in [a, z]
@@ -147,8 +172,8 @@ if __name__ == "__main__":
 
         parse_command_line()
         app.listen(options.port)
-        start_daemon_thread(write_to_arduino)
-        start_daemon_thread(process_data)
+        # start_daemon_thread(write_to_arduino)
+        # start_daemon_thread(process_data)
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         print "GOODBYE"
