@@ -24,11 +24,11 @@ data_queue = Queue.Queue(maxsize=0) # maxsize=0 means unlimited capacity
 # these are read and written to the arduino as they arrive on the queue
 # format: (pump_power,)
 arduino_state = Queue.Queue(maxsize=0)
-arduino_state.put((0,))
+arduino_state.put(('a',))
 
-# a substring of the serial address to connect to for example "ACM" will match "/dev/ACM.0.tty"
-# leave None to skip connecting to arduino.
-serial_addr = None
+# a list of known substrings of serial addresses to try to connect to.
+# if None, then skip connecting
+serial_addr_subs = ["ACM", "usbmodem"]
 # serial connection to arduino, could be None if connection fails
 arduino_serial = None
 
@@ -50,6 +50,8 @@ def process_data():
         # block on new data
         newdata = data_queue.get()
         print("new data processed!", newdata)
+        state = ('m',)
+        arduino_state.put(state)
 
 def write_to_arduino():
     print "write_to_arduino started"
@@ -57,6 +59,8 @@ def write_to_arduino():
         # block on new data
         state = arduino_state.get()
         print("writing to arduino", state)
+        for val in state:
+            arduino_serial.write(val)
 
 
 # Provides all serial port names as strings
@@ -74,20 +78,27 @@ def serial_ports():
             yield port[0]
 
 
-# Initializing arduino connection
-if serial_addr != None:
-    print("Initializing arduino connection")
+# returns a serial object or None
+def connect_to_serial(serial_addr_subs):
     for port in list(serial_ports()):
-        if serial_addr in port:
-            arduino_serial = serial.Serial(port)
-            print("Connecting to serial port: " + ser.port)
-            # ser.timeout = 0.5
-            # ser.write('c')
-            # msg = ser.read()
-            # if msg == 'y':
-            #     continue
+        for sub in serial_addr_subs:
+            if sub in port:
+                ser = serial.Serial(port)
+                print("Conneced to serial port: " + ser.port)
+                return ser
+                # ser.timeout = 0.5
+                # ser.write('c')
+                # msg = ser.read()
+                # if msg == 'y':
+                #     continue
+    return None # if no matches
+
+# Initializing arduino connection
+if serial_addr_subs != None:
+    print("Initializing arduino connection...")
+    arduino_serial = connect_to_serial(serial_addr_subs)
     if arduino_serial == None:
-        raise RuntimeError("Could not find port with substring: " + serial_addr)
+        print("COULD NOT FIND ANY MATCHING SERIAL PORTS")
 else:
     print("Skipping arduino connection")
     arduino_serial = None
