@@ -9,13 +9,13 @@ int letter_val = 0; // [0, 25]
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Hello.");
+  // Serial.println("Hello.");
   pinMode(PIN_PUMP_PWM, OUTPUT);
   Timer1.initialize(20);
 }
 
 void loop() {
-  Serial.println(pump_power);
+  // Serial.println(pump_power);
   read_letter(&letter_val);
   pump_power = map(letter_val, 0, 25, 0, 1024);
   set_pump(pump_power);

@@ -12,23 +12,43 @@ import tornado.websocket
 from serial.tools import list_ports
 from tornado.options import define, options, parse_command_line
 
+ARDUINO_WRITE_FREQ = 100 # approximate Hz
+
 # add command line option for port number
 define("port", default=8080, help="run on the given port", type=int)
 
+class AtomicReference(object):
+    """
+    Threadsafe reference.
+    Beware of mutating the data itself.
+    """
+    def __init__(self, value):
+        self._val = value
+        self._lock = threading.Lock()
+
+    def get(self, ):
+        self._lock.acquire(True)
+        value = self._val
+        self._lock.release()
+        return value
+
+    def set(self, value):
+        self._lock.acquire(True)
+        self._val = value
+        self._lock.release()
+
 
 ## state variables
-# queue of received data
+# threadsafe queue of received data
 data_queue = Queue.Queue(maxsize=0) # maxsize=0 means unlimited capacity
 
-# queue of states to push to arduino
-# these are read and written to the arduino as they arrive on the queue
-# format: (pump_power,)
-arduino_state = Queue.Queue(maxsize=0)
-arduino_state.put((0,))
+# threadsafe container with the state to tell the arduino to be.
+# format: (pump_power,) where all data is a number in the range [0,1]
+arduino_state = AtomicReference((0,))
 
 # a list of known substrings of serial addresses to try to connect to.
 # if None, then skip connecting
-serial_addr_subs = ["ACM", "usbmodem"]
+serial_addr_subs = ["ACM", "usbmodem", "usbserial"]
 # serial connection to arduino, could be None if connection fails
 arduino_serial = None
 
@@ -41,8 +61,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         except ValueError:
             print "INVALID JSON. SKIPPING."
             return
-        state = process_data(obj)
-        # write_to_arduino(state)
+        data_queue.put(obj)
 
 app = tornado.web.Application([
     (r'/', WebSocketHandler),
@@ -50,13 +69,14 @@ app = tornado.web.Application([
 
 
 # process new data
-# output a new state
-def process_data(newdata):
+# current_arduino_state is an (unwrapped) arduino state
+# output a new (unwrapped) arduino state
+def process_data(newdata, current_arduino_state):
     print("processing new data: {}".format(newdata))
     dtype = newdata['type']
     dval = newdata['value']
 
-    pump_power = 0
+    (pump_power,) = current_arduino_state
 
     if newdata['type'] == 'audio-volume':
         baseline = -160
@@ -65,48 +85,31 @@ def process_data(newdata):
 
     return (pump_power,)
 
-# take a state and write it to the arduino
+# take an (unwrapped) state and write it to the arduino
 def write_to_arduino(state):
     print("writing to arduino", state)
-    arduino_serial.flushInput()
     if arduino_serial != None:
         for val in state:
             arduino_serial.write(convert_float_letter(val))
 
 
-# def process_data_thread():
-#     print "process_data started"
-#     while True:
-#         # wait until all states have been written
-#         if not arduino_state.empty():
-#             continue
+def process_data_thread():
+    print "process_data started"
+    while True:
+        # block on new data
+        newdata = data_queue.get()
+        print("processing new data: {}".format(newdata))
+        current_arduino_state = arduino_state.get()
+        newstate = process_data(newdata, current_arduino_state)
+        arduino_state.set(newstate)
 
-#         # block on new data
-#         newdata = data_queue.get()
-#         print("processing new data: {}".format(newdata))
-#         dtype = newdata['type']
-#         dval = newdata['value']
-
-#         pump_power = 0
-
-#         if newdata['type'] == 'audio-volume':
-#             baseline = -160
-#             max_delta = 30
-#             pump_power = (dval - baseline) / max_delta
-
-#         state = (pump_power,)
-#         arduino_state.put(state)
-
-# def write_to_arduino_thread():
-#     print "write_to_arduino started"
-#     while True:
-#         # block on new data
-#         state = arduino_state.get()
-#         print("writing to arduino", state)
-#         if arduino_serial != None:
-#             for val in state:
-#                 arduino_serial.write(convert_float_letter(val))
-
+def write_to_arduino_thread():
+    print "write_to_arduino_thread started"
+    while True:
+        # block on new data
+        state = arduino_state.get()
+        write_to_arduino(state)
+        time.sleep(1 / float(ARDUINO_WRITE_FREQ))
 
 # convert a float to a letter in [a, z]
 # ['a', 'z'] maps to [0, 1]
@@ -166,14 +169,15 @@ if __name__ == "__main__":
                 print("COULD NOT FIND ANY MATCHING SERIAL PORTS")
                 print("! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ")
                 print("\n\n")
+                raw_input("Press <enter> if this is ok.\n")
         else:
             print("Skipping arduino connection")
             arduino_serial = None
 
         parse_command_line()
         app.listen(options.port)
-        # start_daemon_thread(write_to_arduino)
-        # start_daemon_thread(process_data)
+        start_daemon_thread(write_to_arduino_thread)
+        start_daemon_thread(process_data_thread)
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         print "GOODBYE"
