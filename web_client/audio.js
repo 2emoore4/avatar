@@ -1,17 +1,34 @@
 // set up websocket connection to python server
-var connection_active = false;
-var websocket = new WebSocket("ws://localhost:8080");
+var WS_URL = "ws://localhost:8080"
+var websocket = new WebSocket(WS_URL);
 
-var server_update_frequency = 100;
+// How fast to update the server in Hz
+var SERVER_UPDATE_FREQUENCY = 100;
+// How fast to try to reconnect to the server in Hz.
+var SERVER_RECONNECT_FREQUENCY = 0.5;
 
 // set flag upon successful connection
 websocket.onopen = function() {
-    connection_active = true;
+    console.log('websocket connection OPENED .')
 };
+
+// set flag upon successful connection
+websocket.onclose = function() {
+    console.log('websocket connection CLOSED .')
+};
+
+var reconnect_server = function() {
+    if (websocket.readyState == WebSocket.CLOSED) {
+        console.log("attempting to reconnect to server.")
+        websocket = new WebSocket(WS_URL);
+    }
+}
+
+setInterval(reconnect_server, 1000.0 / SERVER_RECONNECT_FREQUENCY);
 
 // read from volume data and send useful stats to server
 var update_server = function () {
-    if (connection_active) {
+    if (websocket.readyState == WebSocket.OPEN) {
         // send most recently recorded volume
         websocket.send(JSON.stringify({
             type: "audio-volume",
@@ -73,7 +90,7 @@ navigator.getUserMedia({audio: true}, function(stream) {
 
 document.getElementById("start_audio").onclick = function() {
     audio_interval = setInterval(update, 10);
-    analysis_interval = setInterval(analysetimedomain, 1000.0 / server_update_frequency);
+    analysis_interval = setInterval(analysetimedomain, 1000.0 / SERVER_UPDATE_FREQUENCY);
 };
 
 document.getElementById("stop_audio").onclick = function() {
