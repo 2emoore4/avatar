@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import threading
+import traceback
 import time
 import serial
 import Queue
@@ -91,8 +92,13 @@ def process_data(newdata, current_arduino_state):
 def write_to_arduino(state):
     print("writing to arduino", state)
     if arduino_serial != None:
-        for val in state:
-            arduino_serial.write(convert_float_letter(val))
+        try:
+            for val in state:
+                arduino_serial.write(convert_float_letter(val))
+        except serial.SerialException as ex:
+            print ex
+            traceback.print_exc()
+            os._exit(1)
 
 
 def process_data_thread():
