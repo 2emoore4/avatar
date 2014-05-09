@@ -30,6 +30,7 @@ data_queue = Queue.Queue(maxsize=0) # maxsize=0 means unlimited capacity
 
 # threadsafe container with the state to tell the arduino to be.
 # format: (pump_power,) where all data is a number in the range [0,1]
+#                       (if the number is out of range, it will be clamped.)
 arduino_state = AtomicReference((0,))
 
 # data processor (not threadsafe)
@@ -158,7 +159,7 @@ if __name__ == "__main__":
                 print("\n\n")
                 raw_input("Press <enter> if this is ok.\n")
         else:
-            print("Skipping arduino connection")
+            print("Skipping arduino connection.")
             arduino_serial = None
 
         parse_command_line()
