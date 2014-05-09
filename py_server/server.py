@@ -79,9 +79,11 @@ def process_data(newdata, current_arduino_state):
     (pump_power,) = current_arduino_state
 
     if newdata['type'] == 'audio-volume':
-        baseline = -160
-        max_delta = 30
-        pump_power = (dval - baseline) / max_delta
+        baseline = -154 # basically zero-sound value
+        max_delta = 6 # roughly maximum loudness change expected
+        delta = dval - baseline
+        print delta
+        pump_power = delta / max_delta
 
     return (pump_power,)
 

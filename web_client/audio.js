@@ -2,6 +2,8 @@
 var connection_active = false;
 var websocket = new WebSocket("ws://localhost:8080");
 
+var server_update_frequency = 100;
+
 // set flag upon successful connection
 websocket.onopen = function() {
     connection_active = true;
@@ -71,7 +73,7 @@ navigator.getUserMedia({audio: true}, function(stream) {
 
 document.getElementById("start_audio").onclick = function() {
     audio_interval = setInterval(update, 10);
-    analysis_interval = setInterval(analysetimedomain, 500);
+    analysis_interval = setInterval(analysetimedomain, 1000.0 / server_update_frequency);
 };
 
 document.getElementById("stop_audio").onclick = function() {
