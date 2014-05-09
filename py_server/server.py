@@ -16,6 +16,9 @@ from tornado.options import define, options, parse_command_line
 from atomicreference import AtomicReference
 from processor import Processor
 
+DEBUG_COMM = False
+DEBUG_PROCESSOR = True
+
 ARDUINO_WRITE_FREQ = 100 # approximate Hz
 
 # add command line option for port number
@@ -43,11 +46,11 @@ arduino_serial = None
 # response handler for web sockets
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
-        print("received a message: {}".format(message))
+        if DEBUG_COMM: print("received a message: {}".format(message))
         try:
             obj = json.loads(message)
         except ValueError:
-            print "INVALID JSON. SKIPPING."
+            if DEBUG_COMM: print "INVALID JSON. SKIPPING."
             return
         data_queue.put(obj)
 
@@ -58,7 +61,7 @@ app = tornado.web.Application([
 
 # take an (unwrapped) state and write it to the arduino
 def write_to_arduino(state):
-    print("writing to arduino", state)
+    if DEBUG_COMM: print("writing to arduino", state)
     if arduino_serial != None:
         try:
             for val in state:
@@ -74,9 +77,17 @@ def process_data_thread():
     while True:
         # block on new data
         newdata = data_queue.get()
-        print("processing new data: {}".format(newdata))
+        if DEBUG_COMM: print("processing new data: {}".format(newdata))
         current_arduino_state = arduino_state.get()
-        newstate = processor.on_new_data(newdata, current_arduino_state)
+        try:
+            newstate = processor.on_new_data(newdata, current_arduino_state)
+            if DEBUG_PROCESSOR: print "-- frame --"
+            if DEBUG_PROCESSOR: processor.debug_print()
+            if DEBUG_PROCESSOR: print newstate
+        except Exception as ex:
+            print ex
+            traceback.print_exc()
+            os._exit(1)
         arduino_state.set(newstate)
 
 def write_to_arduino_thread():
