@@ -40,16 +40,29 @@ def connect_to_serial(serial_addr_subs):
 #websocket = create_connection("ws://18.238.6.29:8080")
 #websocket.send(json.dumps({'type': 'light', 'value': 0.5}))
 
-def next_packet():
+# loops to receive packets from arduino
+def process_packets():
     while True:
-        msg = arduino_serial.read()
-        if msg == 'a':
-            return (arduino_serial.read(), arduino_serial.read())
+        header = arduino_serial.read()
+        if header == 'a':
+            message_size = next_value()
+            messages = []
 
-def start_daemon_thread(fn):
-    thread = threading.Thread(target=fn)
-    thread.daemon = True
-    thread.start()
+            for i in xrange(message_size):
+                messages.append(next_value())
+
+            print messages
+
+# returns next value from serial port (values delimited by spaces)
+def next_value():
+    value_str = ""
+    next_char = arduino_serial.read()
+
+    while next_char != " ":
+        value_str += next_char
+        next_char = arduino_serial.read()
+
+    return int(value_str)
 
 if __name__ == "__main__":
     try:
@@ -68,8 +81,7 @@ if __name__ == "__main__":
             print("Skipping arduino connection.")
             arduino_serial = None
 
-        while True:
-            print next_packet()
+        process_packets()
 
     except KeyboardInterrupt:
         print "GOODBYE"

@@ -6,12 +6,30 @@ void setup() {
 }
 
 void loop() {
-    //Serial.println(read_light());
-    Serial.print("a");
-    Serial.print("b");
-    Serial.print("c");
+    // just testing python client for now
+    int messages[] = {read_light(), 33, 46};
+    send_packet(messages);
 }
 
+// send packet containing int messages
+// message example "a2 23 46 "
+// "a" start of packet
+// "2" number of messages contained in packet
+// "23"/"46" int messages
+// delimited by spaces
+void send_packet(int messages[]) {
+    int packet_size = sizeof(messages) + 1;
+    Serial.print("a");
+    Serial.print(packet_size);
+    Serial.print(" ");
+
+    for (int i = 0; i < packet_size; i++) {
+        Serial.print(messages[i]);
+        Serial.print(" ");
+    }
+}
+
+// charge LED, then reverse voltage and measure time until complete discharge
 int read_light() {
     unsigned int j;
 
