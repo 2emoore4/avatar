@@ -1,5 +1,9 @@
-#define LED_N 2
-#define LED_P 3
+#define LED_N 3
+#define LED_P 2
+#define TEMP A0
+
+// manually defining packet size to avoid packet format mismatch
+#define PACKET_SIZE 2
 
 void setup() {
     Serial.begin(9600);
@@ -7,7 +11,7 @@ void setup() {
 
 void loop() {
     // just testing python client for now
-    int messages[] = {read_light(), 33, 46};
+    int messages[] = {read_light(), read_temp()};
     send_packet(messages);
 }
 
@@ -18,12 +22,11 @@ void loop() {
 // "23"/"46" int messages
 // delimited by spaces
 void send_packet(int messages[]) {
-    int packet_size = sizeof(messages) + 1;
     Serial.print("a");
-    Serial.print(packet_size);
+    Serial.print(PACKET_SIZE);
     Serial.print(" ");
 
-    for (int i = 0; i < packet_size; i++) {
+    for (int i = 0; i < PACKET_SIZE; i++) {
         Serial.print(messages[i]);
         Serial.print(" ");
     }
@@ -47,4 +50,12 @@ int read_light() {
     }
 
     return j;
+}
+
+// read sensor, convert to millivolts (reading * 4.9 mv/unit)
+// convert millivolts to degrees celsius and return
+int read_temp() {
+    pinMode(TEMP, INPUT);
+    int millivolts = analogRead(TEMP) * 4.9;
+    return (millivolts - 500) / 10;
 }
