@@ -51,6 +51,7 @@ def process_packets():
             for i in xrange(message_size):
                 messages.append(next_value())
 
+            # messages is now an array of readings
             print messages
 
 # returns next value from serial port (values delimited by spaces)
