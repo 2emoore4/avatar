@@ -48,11 +48,14 @@ def process_packets():
             message_size = next_value()
             messages = []
 
-            for i in xrange(message_size):
-                messages.append(next_value())
+            try:
+                for i in xrange(message_size):
+                    messages.append(next_value())
 
-            # messages is now an array of readings
-            print messages
+                # messages is now an array of readings
+                print messages
+            except ValueError:
+                print "skipping weird packet"
 
 # returns next value from serial port (values delimited by spaces)
 def next_value():

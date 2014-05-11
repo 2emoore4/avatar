@@ -1,5 +1,4 @@
 #define LED_N 3
-#define LED_P 2
 #define TEMP A5
 #define DIST A0
 
@@ -10,8 +9,8 @@
 float temp_actual_var = 11.0;
 float temp_sensor_var = 2.0;
 float temp_weight = temp_actual_var / (temp_actual_var + temp_sensor_var);
-float light_actual_var = 370.0;
-float light_sensor_var = 2.0;
+float light_actual_var = 600.0;
+float light_sensor_var = 15.0;
 float light_weight = light_actual_var / (light_actual_var + light_sensor_var);
 float dist_actual_var = 2000.0;
 float dist_sensor_var = 100.0;
@@ -19,11 +18,23 @@ float dist_weight = dist_actual_var / (dist_actual_var + dist_sensor_var);
 
 // kalman filter guesses (these could be tweaked)
 int temp_guess = 20;
-int light_guess = 20;
+int light_guess = 150;
 int dist_guess = 230;
+
+int led_start;
+int led_elapsed = 0;
 
 void setup() {
     Serial.begin(9600);
+
+    // charge LED pin and start timer
+    pinMode(LED_N, OUTPUT);
+    digitalWrite(LED_N, HIGH);
+    led_start = millis();
+
+    // remove charge
+    pinMode(LED_N, INPUT);
+    digitalWrite(LED_N, LOW);
 }
 
 void loop() {
@@ -49,32 +60,29 @@ void send_packet(int messages[]) {
     }
 }
 
-// charge LED, then reverse voltage and measure time until complete discharge
-// this process takes some time (tens/hundreds of ms) but not a big deal.
+// if LED is discharged, then record discharge time and reset
+// return most recently recorded discharge time
 int read_light() {
-    unsigned int j;
+    // LED is fully discharged
+    if (digitalRead(LED_N) == 0) {
+        led_elapsed = millis() - led_start;
 
-    pinMode(LED_N, OUTPUT);
-    pinMode(LED_P, OUTPUT);
-    digitalWrite(LED_N, HIGH);
-    digitalWrite(LED_P, LOW);
+        pinMode(LED_N, OUTPUT);
+        digitalWrite(LED_N, HIGH);
+        led_start = millis();
 
-    pinMode(LED_N, INPUT);
-    digitalWrite(LED_N, LOW);
-
-    for (j = 0; j < 3000; j++) {
-        if (digitalRead(LED_N) == 0) break;
-        delay(10);
+        pinMode(LED_N, INPUT);
+        digitalWrite(LED_N, LOW);
     }
 
     // kalman filter stuff happens here
-    float estimate = (1 - light_weight) * light_guess + light_weight * j;
+    float estimate = (1 - light_weight) * light_guess + light_weight * led_elapsed;
     float est_variance = (light_actual_var * light_sensor_var) / (light_actual_var + light_sensor_var);
 
     light_weight = est_variance / (est_variance + light_sensor_var);
 
     // cast to int for now
-    return (int) estimate;
+    return estimate;
 }
 
 // read sensor, convert to millivolts (reading * 4.9 mv/unit)
