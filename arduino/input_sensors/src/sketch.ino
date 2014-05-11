@@ -1,9 +1,10 @@
 #define LED_N 3
 #define LED_P 2
 #define TEMP A5
+#define DIST A0
 
 // manually defining packet size to avoid packet format mismatch
-#define PACKET_SIZE 2
+#define PACKET_SIZE 3
 
 // kalman filter weights (actual_variance / (actual_variance + sensor_variance))
 float temp_actual_var = 11.0;
@@ -12,10 +13,14 @@ float temp_weight = temp_actual_var / (temp_actual_var + temp_sensor_var);
 float light_actual_var = 370.0;
 float light_sensor_var = 2.0;
 float light_weight = light_actual_var / (light_actual_var + light_sensor_var);
+float dist_actual_var = 2000.0;
+float dist_sensor_var = 100.0;
+float dist_weight = dist_actual_var / (dist_actual_var + dist_sensor_var);
 
 // kalman filter guesses (these could be tweaked)
 int temp_guess = 20;
 int light_guess = 20;
+int dist_guess = 230;
 
 void setup() {
     Serial.begin(9600);
@@ -23,7 +28,7 @@ void setup() {
 
 void loop() {
     // just testing python client for now
-    int messages[] = {read_light(), read_temp()};
+    int messages[] = {read_light(), read_temp(), read_distance()};
     send_packet(messages);
 }
 
@@ -84,6 +89,20 @@ int read_temp() {
     float est_variance = (temp_actual_var * temp_sensor_var) / (temp_actual_var + temp_sensor_var);
 
     temp_weight = est_variance / (est_variance + temp_sensor_var);
+
+    // cast to int for now
+    return (int) estimate;
+}
+
+int read_distance() {
+    pinMode(DIST, INPUT);
+    float millivolts = analogRead(DIST) * 4.9;
+
+    // kalman filter stuff happens here
+    float estimate = (1 - dist_weight) * dist_guess + dist_weight * millivolts;
+    float est_variance = (dist_actual_var * dist_sensor_var) / (dist_actual_var + dist_sensor_var);
+
+    dist_weight = est_variance / (est_variance + dist_sensor_var);
 
     // cast to int for now
     return (int) estimate;
