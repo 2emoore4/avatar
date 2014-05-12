@@ -45,10 +45,11 @@ def process_packets():
     while True:
         header = arduino_serial.read()
         if header == 'a':
-            message_size = next_value()
-            messages = []
 
             try:
+                message_size = next_value()
+                messages = []
+
                 for i in xrange(message_size):
                     messages.append(next_value())
 
@@ -85,6 +86,7 @@ if __name__ == "__main__":
             print("Skipping arduino connection.")
             arduino_serial = None
 
+        arduino_serial.baudrate = 115200
         process_packets()
 
     except KeyboardInterrupt:
