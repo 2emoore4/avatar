@@ -1,4 +1,6 @@
+import datetime
 import json
+import numpy
 import os
 import sys
 import serial
@@ -40,12 +42,11 @@ def connect_to_serial(serial_addr_subs):
 #websocket = create_connection("ws://18.238.6.29:8080")
 #websocket.send(json.dumps({'type': 'light', 'value': 0.5}))
 
-# loops to receive packets from arduino
-def process_packets():
+# receives packet from arduino
+def next_packet():
     while True:
         header = arduino_serial.read()
         if header == 'a':
-
             try:
                 message_size = next_value()
                 messages = []
@@ -54,7 +55,7 @@ def process_packets():
                     messages.append(next_value())
 
                 # messages is now an array of readings
-                print messages
+                return messages
             except ValueError:
                 print "skipping weird packet"
 
@@ -68,6 +69,44 @@ def next_value():
         next_char = arduino_serial.read()
 
     return int(value_str)
+
+pots = []
+lights = []
+
+def process_packet(packet):
+    save_measurement(pots, packet[3])
+    state_change(pots)
+
+    save_measurement(lights, packet[0])
+    state_change(lights)
+
+# saves measurement to list, dequeues oldest measurement
+def save_measurement(history, value):
+    history.append(value)
+    if len(history) > 1000:
+        history.pop(0)
+
+# returns true if most recent measurements show a state change
+def state_change(history):
+    size = len(history)
+    if size > 800:
+        recents = []
+        for i in xrange(size - 100, size):
+            recents.append(history[i])
+
+        recent_mean = numpy.mean(recents)
+        full_mean = numpy.mean(history)
+
+        diff = abs(recent_mean - full_mean)
+        percent_change = diff / full_mean
+
+        # state change
+        if percent_change > 0.25:
+            print "state change " + str(datetime.datetime.now())
+            del history[:]
+            return True
+    else:
+        return False
 
 if __name__ == "__main__":
     try:
@@ -87,7 +126,10 @@ if __name__ == "__main__":
             arduino_serial = None
 
         arduino_serial.baudrate = 115200
-        process_packets()
+
+        while True:
+            packet = next_packet()
+            process_packet(packet)
 
     except KeyboardInterrupt:
         print "GOODBYE"

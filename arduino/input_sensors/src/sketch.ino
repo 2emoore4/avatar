@@ -50,7 +50,7 @@ void setup() {
     Serial.begin(115200);
 
     init_led();
-    init_imu();
+//    init_imu();
 }
 
 void loop() {
@@ -59,7 +59,7 @@ void loop() {
     send_packet(messages);
 
     Serial.println("");
-    read_imu();
+//    read_imu();
 }
 
 // send packet containing int messages
