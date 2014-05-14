@@ -1,3 +1,4 @@
+import threading
 from collections import deque
 from arduinostate import ArduinoState
 
@@ -10,6 +11,12 @@ class Processor(object):
         'reset': ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=0),
         'enter': ArduinoState(pump_power=0.2, ledR=0, ledG=1, ledB=0),
         'exit': ArduinoState(pump_power=0, ledR=1, ledG=0, ledB=0),
+        'wake': ArduinoState(pump_power=0, ledR=1, ledG=1, ledB=1),
+        'sleep': ArduinoState(pump_power=0, ledR=0, ledG=1, ledB=1),
+        'start_talking': ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=1),
+        'stop_talking': ArduinoState(pump_power=0, ledR=0, ledG=1, ledB=1),
+        'wave-gesture': ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=1),
+        'stop-gesture': ArduinoState(pump_power=0, ledR=1, ledG=0, ledB=0),
     }
 
     """
@@ -18,6 +25,21 @@ class Processor(object):
     """
     def __init__(self):
         self.volume = RollingNumber(EXPECTED_VOLUME_ZERO, VOLUME_MEM)
+
+    def set_interval(func, milliseconds):
+        def func_wrapper():
+            set_interval(func, milliseconds/1000)
+            func()
+        t = threading.Timer(milliseconds/1000, func_wrapper)
+        t.start()
+        return t
+
+    def set_timeout(func, milliseconds):
+        def func_wrapper():
+            func()
+        t = threading.Timer(milliseconds/1000, func_wrapper)
+        t.start()
+        return t
 
     def on_new_data(self, newdata, last_state):
         """
