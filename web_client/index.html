@@ -4,9 +4,13 @@
         <title>boxatar web client</title>
         <link rel="stylesheet" type="text/css" href="third_party/flat/css/flat-ui.css">
         <link rel="stylesheet" type="text/css" href="style.css">
+        <script src="fish/third_party/pixi.dev.js"></script>
+        <script src="fish/third_party/gl-matrix-min.js"></script>
+        <script src="fish/third_party/perlin.js"></script>
     </head>
 
     <body>
+        <div id="fish"></div>
         <div id="commands">
             <button id="enter" class="btn btn-primary btn-xs">enter</button>
             <button id="exit" class="btn btn-primary btn-xs">exit</button>
@@ -17,6 +21,7 @@
             <button id="reset" class="btn btn-primary btn-xs">reset</button>
             <button id="wave-gesture" class="btn btn-primary btn-xs">wave gesture</button>
             <button id="stop-gesture" class="btn btn-primary btn-xs">stop gesture</button>
+            <button id="fish-init" class="btn btn-primary btn-xs">fish</button>
         </div>
         <div id="sliders">
             <button id="enable" class="btn btn-primary btn-xs">enable</button>
@@ -32,6 +37,9 @@
         min = <span id="min">min</span>,
         peaks = <span id="peaks">peaks</span>
 
+        <script src="fish/lib/util.js"></script>
+        <script src="fish/lib/fish.js"></script>
+        <script src="fish/lib/test.js"></script>
         <script src="audio.js"></script>
         <script src="command.js"></script>
     </body>

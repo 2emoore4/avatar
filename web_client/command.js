@@ -33,6 +33,7 @@ document.getElementById("stop-talking").onclick = function() {send_command("stop
 document.getElementById("reset").onclick = function() {send_command("reset")};
 document.getElementById("wave-gesture").onclick = function() {send_command("wave-gesture")};
 document.getElementById("stop-gesture").onclick = function() {send_command("stop-gesture")};
+document.getElementById("fish-init").onclick = fish_init
 
 var slider_interval;
 document.getElementById("enable").onclick = function() {
