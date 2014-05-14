@@ -1,5 +1,7 @@
 // set up websocket connection to python server
-var WS_URL = "ws://localhost:8080"
+var WS_HOST = document.domain;
+var WS_PORT = 8080;
+var WS_URL = "ws://" + WS_HOST + ":" + WS_PORT;
 var websocket = new WebSocket(WS_URL);
 
 // How fast to update the server in Hz
