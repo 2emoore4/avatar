@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+trap killgroup SIGINT
+
+killgroup() {
+  echo ""
+  echo "destroying proxies..."
+  kill 0
+}
+
+xorp 8889 milessteele.com 5001 &
+xorp 8080 milessteele.com 8080 &
+wait
