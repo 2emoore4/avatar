@@ -6,17 +6,23 @@
     </head>
 
     <body>
+        <div id="commands">
+            <button id="enter">enter</button>
+            <button id="exit">exit</button>
+            <button id="wake">wake up</button>
+            <button id="sleep">sleep</button>
+            <button id="start-talking">start talking</button>
+            <button id="stop-talking">stop talking</button>
+        </div>
         <canvas id="canvas" width="1512" height="130" style="display: block;"></canvas><br>
         <button id="start_audio">start audio</button>
         <button id="stop_audio">stop audio</button><br>
-        avg = <span id="avg">avg</span><br>
-        max = <span id="max">max</span><br>
-        min = <span id="min">min</span><br>
-        peaks = <span id="peaks">peaks</span><br>
-        <button id="start_speech">start speech</button>
-        <button id="stop_speech">stop speech</button><br>
-        text = <span id="text">text</span><br>
+        avg = <span id="avg">avg</span>,
+        max = <span id="max">max</span>,
+        min = <span id="min">min</span>,
+        peaks = <span id="peaks">peaks</span>
 
         <script src="audio.js"></script>
+        <script src="command.js"></script>
     </body>
 </html>

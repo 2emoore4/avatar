@@ -31,6 +31,8 @@ class Processor(object):
             delta = vol.avg() - EXPECTED_VOLUME_ZERO
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
+        elif newdata['type'] == 'command':
+            print "received message: " + newdata['value']
 
         # construct new state
         return (pump_power,)

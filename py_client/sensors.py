@@ -72,13 +72,21 @@ def next_value():
 
 pots = []
 lights = []
+temps = []
+dists = []
 
 def process_packet(packet):
-    save_measurement(pots, packet[3])
-    state_change(pots)
-
     save_measurement(lights, packet[0])
     state_change(lights)
+
+    save_measurement(temps, packet[1])
+    state_change(temps)
+
+    save_measurement(dists, packet[2])
+    state_change(dists)
+
+    save_measurement(pots, packet[3])
+    state_change(pots)
 
 # saves measurement to list, dequeues oldest measurement
 def save_measurement(history, value):
@@ -102,7 +110,7 @@ def state_change(history):
 
         # state change
         if percent_change > 0.25:
-            print "state change " + str(datetime.datetime.now())
+            print "state change " + str(full_mean) + " to " + str(recent_mean)
             del history[:]
             return True
     else:

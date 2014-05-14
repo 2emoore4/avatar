@@ -51,14 +51,6 @@ recognition.onresult = function (event) {
     }
 };
 
-document.getElementById("start_speech").onclick = function() {
-    recognition.start();
-};
-
-document.getElementById("stop_speech").onclick = function() {
-    recognition.stop();
-};
-
 // error callback for getUserMedia function
 var errorlog = function(e) {
     console.log("Rejected.", e);
