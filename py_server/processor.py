@@ -26,6 +26,7 @@ class Processor(object):
     """
     def __init__(self):
         self.volume = RollingNumber(EXPECTED_VOLUME_ZERO, VOLUME_MEM)
+        self.volume_min = float('inf')
 
     def set_interval(func, milliseconds):
         def func_wrapper():
@@ -60,7 +61,8 @@ class Processor(object):
         if newdata['type'] == 'audio-volume':
             vol = self.volume
             vol.record(dval)
-            delta = vol.avg() - EXPECTED_VOLUME_ZERO
+            self.volume_min = min(self.volume_min, dval)
+            delta = vol.avg() - self.volume_min
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
         elif newdata['type'] == 'light-intensity':
