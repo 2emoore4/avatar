@@ -9,6 +9,8 @@ app.use(express["static"]('../'));
 
 app.use(express.bodyParser());
 
-app.listen(8889);
+port = 8889
+console.log("using port " + port);
+app.listen(port);
 
 console.log('listening...');
