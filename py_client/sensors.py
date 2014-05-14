@@ -8,6 +8,14 @@ import serial
 from serial.tools import list_ports
 from websocket import create_connection
 
+connection_active = False
+
+def on_open(ws):
+    connection_active = True
+
+def on_close(ws):
+    connection_active = False
+
 # a list of known substrings of serial addresses to try to connect to.
 # if None, then skip connecting
 serial_addr_subs = ["ACM", "usbmodem", "usbserial"]
@@ -38,13 +46,9 @@ def connect_to_serial(serial_addr_subs):
                 return ser
     return None # if no matches
 
-# connect to websocket
-#websocket = create_connection("ws://18.238.6.29:8080")
-#websocket.send(json.dumps({'type': 'light', 'value': 0.5}))
-
 # receives packet from arduino
 def next_packet():
-    while True:
+    while True and arduino_serial != None:
         header = arduino_serial.read()
         if header == 'a':
             try:
@@ -88,6 +92,12 @@ def process_packet(packet):
     save_measurement(pots, packet[3])
     state_change(pots)
 
+    if connection_active:
+        websocket.send(json.dumps({'type': 'light-intensity', 'value': packet[0]}))
+        websocket.send(json.dumps({'type': 'temperature', 'value': packet[1]}))
+        websocket.send(json.dumps({'type': 'distance', 'value': packet[2]}))
+        websocket.send(json.dumps({'type': 'potentiometer', 'value': packet[3]}))
+
 # saves measurement to list, dequeues oldest measurement
 def save_measurement(history, value):
     history.append(value)
@@ -129,15 +139,20 @@ if __name__ == "__main__":
                 print("! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ")
                 print("\n\n")
                 raw_input("Press <enter> if this is ok.\n")
+            else:
+                arduino_serial.baudrate = 115200
         else:
             print("Skipping arduino connection.")
             arduino_serial = None
 
-        arduino_serial.baudrate = 115200
+        # connect to websocket
+        websocket = create_connection("ws://localhost:8080")
+        websocket.on_open = on_open
+        websocket.on_close = on_close
 
         while True:
             packet = next_packet()
-            process_packet(packet)
+            if packet != None: process_packet(packet)
 
     except KeyboardInterrupt:
         print "GOODBYE"
