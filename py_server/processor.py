@@ -1,4 +1,5 @@
 from collections import deque
+from arduinostate import ArduinoState
 
 EXPECTED_VOLUME_ZERO = -155 # basically zero-sound value
 EXPECTED_VOLUME_DELTA = 6 # roughly maximum volume change expected
@@ -12,18 +13,18 @@ class Processor(object):
     def __init__(self):
         self.volume = RollingNumber(EXPECTED_VOLUME_ZERO, VOLUME_MEM)
 
-    def on_new_data(self, newdata, last_arduino_state):
+    def on_new_data(self, newdata, last_state):
         """
         Process new data.
 
         newdata is of the form {'type': 'audio-volume', 'value': 0.8}
-        last_arduino_state is an (unwrapped) arduino state
+        last_state is an (unwrapped) arduino state
         returns a new (unwrapped) arduino state
         """
         dtype, dval = newdata['type'], newdata['value']
 
         # deconstruct old state
-        (pump_power,) = last_arduino_state
+        (pump_power, ledR, ledG, ledB) = last_state.pump_power, last_state.ledR, last_state.ledG, last_state.ledB
 
         if newdata['type'] == 'audio-volume':
             vol = self.volume
@@ -31,6 +32,7 @@ class Processor(object):
             delta = vol.avg() - EXPECTED_VOLUME_ZERO
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
+            ledG = pump_power
         elif newdata['type'] == 'light-intensity':
             # something with lights
             print "received light message: " + str(newdata['value'])
@@ -39,7 +41,7 @@ class Processor(object):
             print "received message: " + newdata['value']
 
         # construct new state
-        return (pump_power,)
+        return ArduinoState(pump_power=pump_power, ledR=ledR, ledG=ledG, ledB=ledB)
 
     def debug_print(self):
         print "vol avg*: {}".format(self.volume.avg() - EXPECTED_VOLUME_ZERO)

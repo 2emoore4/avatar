@@ -19,6 +19,7 @@ from serial.tools import list_ports
 from tornado.options import define, options, parse_command_line
 
 from atomicreference import AtomicReference
+from arduinostate import ArduinoState
 from processor import Processor
 
 DEBUG_COMM = False
@@ -35,9 +36,8 @@ define("port", default=8080, help="run on the given port", type=int)
 data_queue = Queue.Queue(maxsize=0) # maxsize=0 means unlimited capacity
 
 # threadsafe container with the state to tell the arduino to be.
-# format: (pump_power,) where all data is a number in the range [0,1]
-#                       (if the number is out of range, it will be clamped.)
-arduino_state = AtomicReference((0,))
+# see ArduinoState for data format
+arduino_state = AtomicReference(ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=0))
 
 # data processor (not threadsafe)
 # the processor stores persistent data and figures out how
@@ -71,6 +71,7 @@ def write_to_arduino(state):
     if DEBUG_COMM: print("writing to arduino", state)
     if arduino_serial != None:
         try:
+            arduino_serial.write('*')
             for val in state:
                 arduino_serial.write(convert_float_letter(val))
         except serial.SerialException as ex:
