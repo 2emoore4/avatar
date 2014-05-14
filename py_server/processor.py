@@ -6,7 +6,11 @@ EXPECTED_VOLUME_DELTA = 6 # roughly maximum volume change expected
 VOLUME_MEM = 10
 
 class Processor(object):
-    reset_state = ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=0)
+    command_states = {
+        'reset': ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=0),
+        'enter': ArduinoState(pump_power=0.2, ledR=0, ledG=1, ledB=0),
+        'exit': ArduinoState(pump_power=0, ledR=1, ledG=0, ledB=0),
+    }
 
     """
     Interprets and massages data from inputs to format outputs.
@@ -40,10 +44,8 @@ class Processor(object):
             ledG = light_val
             ledB = light_val
         elif newdata['type'] == 'command':
-            if newdata['value'] == 'reset':
-                return self.reset_state
-
-            print "received message: " + newdata['value']
+            print "received command: " + newdata['value']
+            return self.command_states[dval]
 
         # construct new state
         return ArduinoState(pump_power=pump_power, ledR=ledR, ledG=ledG, ledB=ledB)
