@@ -1,0 +1,11 @@
+button {
+    min-width: 97px;
+}
+
+input {
+    max-width: 97px;
+}
+
+body {
+    background-color: #ECF0F1;
+}

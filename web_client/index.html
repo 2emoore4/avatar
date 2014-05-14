@@ -2,25 +2,31 @@
 <html>
     <head>
         <title>boxatar web client</title>
+        <link rel="stylesheet" type="text/css" href="third_party/flat/css/flat-ui.css">
         <link rel="stylesheet" type="text/css" href="style.css">
     </head>
 
     <body>
         <div id="commands">
-            <button id="enter">enter</button>
-            <button id="exit">exit</button>
-            <button id="wake">wake up</button>
-            <button id="sleep">sleep</button>
-            <button id="start-talking">start talking</button>
-            <button id="stop-talking">stop talking</button>
+            <button id="enter" class="btn btn-primary btn-xs">enter</button>
+            <button id="exit" class="btn btn-primary btn-xs">exit</button>
+            <button id="wake" class="btn btn-primary btn-xs">wake up</button>
+            <button id="sleep" class="btn btn-primary btn-xs">sleep</button>
+            <button id="start-talking" class="btn btn-primary btn-xs">start talking</button>
+            <button id="stop-talking" class="btn btn-primary btn-xs">stop talking</button>
+            <button id="reset" class="btn btn-primary btn-xs">reset</button>
+            <button id="wave-gesture" class="btn btn-primary btn-xs">wave gesture</button>
+            <button id="stop-gesture" class="btn btn-primary btn-xs">stop gesture</button>
         </div>
         <div id="sliders">
-            <input id="lights" type="range" min="0" max="99">
-            <input id="audio" type="range" min="0" max="99">
+            <button id="enable" class="btn btn-primary btn-xs">enable</button>
+            <button id="disable" class="btn btn-primary btn-xs">disable</button>
+            <input id="lights" type="range" min="0" max="800">
+            <input id="audio" type="range" min="-170" max="-120">
         </div>
         <canvas id="canvas" width="1512" height="130" style="display: block;"></canvas><br>
-        <button id="start_audio">start audio</button>
-        <button id="stop_audio">stop audio</button><br>
+        <button id="start_audio" class="btn btn-primary btn-xs">start audio</button>
+        <button id="stop_audio" class="btn btn-primary btn-xs">stop audio</button><br>
         avg = <span id="avg">avg</span>,
         max = <span id="max">max</span>,
         min = <span id="min">min</span>,

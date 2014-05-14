@@ -19,12 +19,10 @@ var send_slider_data = function () {
 
         websocket.send(JSON.stringify({
             type: "light-intensity",
-            value: lights
+            value: 800 - lights
         }));
     }
 };
-
-// var slider_interval = setInterval(send_slider_data, 100);
 
 document.getElementById("enter").onclick = function() {send_command("enter")};
 document.getElementById("exit").onclick = function() {send_command("exit")};
@@ -32,3 +30,11 @@ document.getElementById("wake").onclick = function() {send_command("wake")};
 document.getElementById("sleep").onclick = function() {send_command("sleep")};
 document.getElementById("start-talking").onclick = function() {send_command("start-talking")};
 document.getElementById("stop-talking").onclick = function() {send_command("stop-talking")};
+
+var slider_interval;
+document.getElementById("enable").onclick = function() {
+    slider_interval = setInterval(send_slider_data, 100);
+};
+document.getElementById("disable").onclick = function() {
+    clearInterval(slider_interval);
+};
