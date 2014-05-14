@@ -21,7 +21,7 @@ websocket.onclose = function() {
 
 var reconnect_server = function() {
     if (websocket.readyState == WebSocket.CLOSED) {
-        console.log("attempting to reconnect to server.")
+        console.log("attempting to reconnect to server ("+WS_URL+").")
         websocket = new WebSocket(WS_URL);
     }
 }
