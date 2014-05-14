@@ -1,6 +1,6 @@
 from collections import deque
 
-EXPECTED_VOLUME_ZERO = -154 # basically zero-sound value
+EXPECTED_VOLUME_ZERO = -155 # basically zero-sound value
 EXPECTED_VOLUME_DELTA = 6 # roughly maximum volume change expected
 VOLUME_MEM = 10
 
