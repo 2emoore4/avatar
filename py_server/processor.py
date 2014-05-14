@@ -1,5 +1,6 @@
 import threading
 from collections import deque
+from colorsys import hsv_to_rgb, rgb_to_hsv
 from arduinostate import ArduinoState
 
 EXPECTED_VOLUME_ZERO = -155 # basically zero-sound value
@@ -53,6 +54,8 @@ class Processor(object):
 
         # deconstruct old state
         (pump_power, ledR, ledG, ledB) = last_state.pump_power, last_state.ledR, last_state.ledG, last_state.ledB
+        # convert colors
+        led_hue, led_sat, led_val = rgb_to_hsv(ledR, ledG, ledB)
 
         if newdata['type'] == 'audio-volume':
             vol = self.volume
@@ -69,6 +72,17 @@ class Processor(object):
             print "received command: " + newdata['value']
             return self.command_states[dval]
 
+        # led tracks pump power
+        led_val = pump_power
+
+        # rotate hue
+        led_hue = (led_hue + 0.1) % 1.0
+
+        # bound brightness
+        led_val = min(led_val, 1.0)
+
+        # convert colors
+        ledR, ledG, ledB = hsv_to_rgb(led_hue, led_sat, led_val)
         # construct new state
         return ArduinoState(pump_power=pump_power, ledR=ledR, ledG=ledG, ledB=ledB)
 
