@@ -5,7 +5,7 @@ var WS_URL = "ws://" + WS_HOST + ":" + WS_PORT;
 var websocket = new WebSocket(WS_URL);
 
 // How fast to update the server in Hz
-var SERVER_UPDATE_FREQUENCY = 100;
+var SERVER_UPDATE_FREQUENCY = 10;
 // How fast to try to reconnect to the server in Hz.
 var SERVER_RECONNECT_FREQUENCY = 0.5;
 
