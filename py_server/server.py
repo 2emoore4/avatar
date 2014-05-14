@@ -108,8 +108,9 @@ def write_to_arduino_thread():
 def read_from_arduino_thread():
     print "read_from_arduino_thread started"
     while True:
-        message = arduino_serial.readline()
-        if ARDUINO_LISTEN: print("arduino serial: {}".format(message.strip()))
+        if arduino_serial != None:
+            message = arduino_serial.readline()
+            if ARDUINO_LISTEN: print("arduino serial: {}".format(message.strip()))
 
 # convert a float to a letter in [a, z]
 # ['a', 'z'] maps to [0, 1]
