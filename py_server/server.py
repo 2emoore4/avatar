@@ -1,3 +1,8 @@
+"""
+This machine talks to the fountain arduino
+and receives data over the network from clients with sensors.
+"""
+
 import json
 import os
 import sys
@@ -17,6 +22,7 @@ from atomicreference import AtomicReference
 from processor import Processor
 
 DEBUG_COMM = False
+ARDUINO_LISTEN = False
 DEBUG_PROCESSOR = True
 
 ARDUINO_WRITE_FREQ = 100 # approximate Hz
@@ -99,6 +105,12 @@ def write_to_arduino_thread():
         write_to_arduino(state)
         time.sleep(1 / float(ARDUINO_WRITE_FREQ))
 
+def read_from_arduino_thread():
+    print "read_from_arduino_thread started"
+    while True:
+        message = arduino_serial.readline()
+        if ARDUINO_LISTEN: print("arduino serial: {}".format(message.strip()))
+
 # convert a float to a letter in [a, z]
 # ['a', 'z'] maps to [0, 1]
 # anything floats out of bounds will be clamped. So 1.7 is 'z'
@@ -165,6 +177,7 @@ if __name__ == "__main__":
         parse_command_line()
         app.listen(options.port)
         start_daemon_thread(write_to_arduino_thread)
+        start_daemon_thread(read_from_arduino_thread)
         start_daemon_thread(process_data_thread)
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
