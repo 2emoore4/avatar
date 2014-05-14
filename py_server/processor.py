@@ -6,6 +6,8 @@ EXPECTED_VOLUME_DELTA = 6 # roughly maximum volume change expected
 VOLUME_MEM = 10
 
 class Processor(object):
+    reset_state = ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=0)
+
     """
     Interprets and massages data from inputs to format outputs.
     This is a class because it can include persistent storage.
@@ -32,12 +34,15 @@ class Processor(object):
             delta = vol.avg() - EXPECTED_VOLUME_ZERO
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
-            ledG = pump_power
         elif newdata['type'] == 'light-intensity':
-            # something with lights
-            print "received light message: " + str(newdata['value'])
+            light_val = maprange(dval, 800, 0, 0, 1)
+            ledR = light_val
+            ledG = light_val
+            ledB = light_val
         elif newdata['type'] == 'command':
-            # TODO convert command name to arduino state tuple here
+            if newdata['value'] == 'reset':
+                return self.reset_state
+
             print "received message: " + newdata['value']
 
         # construct new state
