@@ -56,7 +56,7 @@ class Processor(object):
         # deconstruct old state
         (pump_power, ledR, ledG, ledB) = last_state.pump_power, last_state.ledR, last_state.ledG, last_state.ledB
         # convert colors
-        led_hue, led_sat, led_val = rgb_to_hsv(ledR, ledG, ledB)
+        led_hue, led_sat, led_val = rgb_to_hsv(max(0, ledR), max(0, ledG), max(0, ledB))
 
         if newdata['type'] == 'audio-volume':
             vol = self.volume
@@ -76,9 +76,10 @@ class Processor(object):
 
         # led tracks pump power
         led_val = pump_power
+        led_sat = 1
 
         # rotate hue
-        led_hue = (led_hue + 0.1) % 1.0
+        led_hue = (led_hue + 0.0001) % 1.0
 
         # bound brightness
         led_val = min(led_val, 1.0)
