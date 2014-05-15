@@ -162,8 +162,7 @@ def start_daemon_thread(fn):
 if __name__ == "__main__":
     try:
         # Initializing arduino connection
-        #if serial_addr_subs != None:
-        if False:
+        if serial_addr_subs != None:
             print("Initializing arduino connection...")
             arduino_serial = connect_to_serial(serial_addr_subs)
             if arduino_serial == None:

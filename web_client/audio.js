@@ -1,6 +1,5 @@
 // set up websocket connection to python server
-// var WS_HOST = document.domain;
-var WS_HOST = "18.111.15.144";
+var WS_HOST = document.domain;
 var WS_PORT = 8080;
 var WS_URL = "ws://" + WS_HOST + ":" + WS_PORT;
 var websocket = new WebSocket(WS_URL);
