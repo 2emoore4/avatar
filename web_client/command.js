@@ -11,7 +11,7 @@ var command_mode = function(enabled) {
     if (websocket.readyState == WebSocket.OPEN) {
         websocket.send(JSON.stringify({
             type: "command-mode",
-            value: enabled ? true : false
+            value: enabled ? 'true' : 'false'
         }));
     }
 };
@@ -42,7 +42,7 @@ document.getElementById("stop-talking").onclick = function() {send_command("stop
 document.getElementById("reset").onclick = function() {send_command("reset")};
 document.getElementById("wave-gesture").onclick = function() {send_command("wave-gesture")};
 document.getElementById("stop-gesture").onclick = function() {send_command("stop-gesture")};
-document.getElementById("fish-init").onclick = fish_init
+// document.getElementById("fish-init").onclick = fish_init
 document.getElementById("happy").onclick = function() {fish.happy()};
 document.getElementById("sad").onclick = function() {fish.sad()};
 document.getElementById("start").onclick = function() {command_mode(true)};
