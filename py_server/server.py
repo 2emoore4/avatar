@@ -22,8 +22,8 @@ from atomicreference import AtomicReference
 from arduinostate import ArduinoState
 from processor import Processor
 
-DEBUG_COMM = False
-ARDUINO_LISTEN = False
+DEBUG_NET_COMM = True
+DEBUG_ARDUINO_COMM = False
 DEBUG_PROCESSOR = True
 
 ARDUINO_WRITE_FREQ = 100 # approximate Hz
@@ -53,11 +53,11 @@ arduino_serial = None
 # response handler for web sockets
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
-        if DEBUG_COMM: print("received a message: {}".format(message))
+        if DEBUG_NET_COMM: print("received a message: {}".format(message))
         try:
             obj = json.loads(message)
         except ValueError:
-            if DEBUG_COMM: print "INVALID JSON. SKIPPING."
+            if DEBUG_NET_COMM: print "INVALID JSON. SKIPPING."
             return
         data_queue.put(obj)
 
@@ -68,7 +68,7 @@ app = tornado.web.Application([
 
 # take an (unwrapped) state and write it to the arduino
 def write_to_arduino(state):
-    if DEBUG_COMM: print("writing to arduino", state)
+    if DEBUG_ARDUINO_COMM: print("writing to arduino", state)
     if arduino_serial != None:
         try:
             arduino_serial.write('*')
@@ -85,7 +85,7 @@ def process_data_thread():
     while True:
         # block on new data
         newdata = data_queue.get()
-        if DEBUG_COMM: print("processing new data: {}".format(newdata))
+        if DEBUG_NET_COMM: print("processing new data: {}".format(newdata))
         current_arduino_state = arduino_state.get()
         try:
             newstate = processor.on_new_data(newdata, current_arduino_state)
@@ -111,7 +111,7 @@ def read_from_arduino_thread():
     while True:
         if arduino_serial != None:
             message = arduino_serial.readline()
-            if ARDUINO_LISTEN: print("arduino serial: {}".format(message.strip()))
+            if DEBUG_ARDUINO_COMM: print("arduino serial: {}".format(message.strip()))
 
 # convert a float to a letter in [a, z]
 # ['a', 'z'] maps to [0, 1]
