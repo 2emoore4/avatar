@@ -60,6 +60,8 @@ void loop() {
 
     Serial.println("");
 //    read_imu();
+
+    delay(100);
 }
 
 // send packet containing int messages

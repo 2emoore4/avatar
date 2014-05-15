@@ -67,6 +67,7 @@ class Processor(object):
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
         elif newdata['type'] == 'light-intensity':
+            print "light intensity: " + str(dval)
             light_val = maprange(dval, 800, 0, 0, 1)
             led_hue = light_val
             led_sat = light_val

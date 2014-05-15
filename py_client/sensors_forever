@@ -3,4 +3,5 @@ while [ 1 ]
 do
     python sensors.py
     echo "EXITED, restarting"
+    sleep 0.4
 done

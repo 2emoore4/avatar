@@ -80,6 +80,7 @@ temps = []
 dists = []
 
 def process_packet(packet):
+    print "packet"
     save_measurement(lights, packet[0])
     state_change(lights)
 
@@ -92,11 +93,10 @@ def process_packet(packet):
     save_measurement(pots, packet[3])
     state_change(pots)
 
-    if connection_active:
-        websocket.send(json.dumps({'type': 'light-intensity', 'value': packet[0]}))
-        websocket.send(json.dumps({'type': 'temperature', 'value': packet[1]}))
-        websocket.send(json.dumps({'type': 'distance', 'value': packet[2]}))
-        websocket.send(json.dumps({'type': 'potentiometer', 'value': packet[3]}))
+    websocket.send(json.dumps({'type': 'light-intensity', 'value': packet[0]}))
+    websocket.send(json.dumps({'type': 'temperature', 'value': packet[1]}))
+    websocket.send(json.dumps({'type': 'distance', 'value': packet[2]}))
+    websocket.send(json.dumps({'type': 'potentiometer', 'value': packet[3]}))
 
 # saves measurement to list, dequeues oldest measurement
 def save_measurement(history, value):
@@ -146,9 +146,8 @@ if __name__ == "__main__":
             arduino_serial = None
 
         # connect to websocket
-        websocket = create_connection("ws://localhost:8080")
-        websocket.on_open = on_open
-        websocket.on_close = on_close
+        websocket = create_connection("ws://milessteele.com:8080")
+        print "done"
 
         while True:
             packet = next_packet()
