@@ -34,6 +34,7 @@ class Processor(object):
         self.volume_min = float('inf')
         self.distance = RollingNumber(DISTANCE_FAR_GUESS, DISTANCE_MEM)
         self.arduino_state = arduino_state
+        self.light_sensor = 1000
 
         self.last_gesture_time = time.time() - 2 * GESTURE_FADE_DURATION
 
@@ -77,7 +78,8 @@ class Processor(object):
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
         elif newdata['type'] == 'light-intensity':
-            light_val = maprange(dval, 800, 0, 0, 1)
+            self.light_sensor = dval
+            light_val = maprange(self.light_sensor, 500, 0, 0, 1)
             led_hue = light_val
             led_sat = light_val
             led_val = light_val
@@ -99,7 +101,7 @@ class Processor(object):
 
         # act on gesture
         if time.time() - self.last_gesture_time < GESTURE_FADE_DURATION:
-            pump_power += 1
+            pump_power = 0.7
 
         # rotate hue
         led_hue = (time.time() / 20) % 1
@@ -119,6 +121,7 @@ class Processor(object):
         print "vol var : {}".format(self.volume.variance())
         print "vol lst*: {}".format(self.volume.last() - EXPECTED_VOLUME_ZERO)
         print "vol globmin: {}".format(self.volume_min)
+        print "light sensor: {}".format(self.light_sensor)
         print "dist avg: {}".format(self.distance.avg())
         print "last gesture: {}".format(self.last_gesture_time)
         print "time since gesture: {}".format(time.time() - self.last_gesture_time)
