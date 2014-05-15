@@ -1,11 +1,16 @@
 import threading
+import time
 from collections import deque
 from colorsys import hsv_to_rgb, rgb_to_hsv
 from arduinostate import ArduinoState
 
 EXPECTED_VOLUME_ZERO = -155 # basically zero-sound value
-EXPECTED_VOLUME_DELTA = 15 # roughly maximum volume change expected
+EXPECTED_VOLUME_DELTA = 20 # roughly maximum volume change expected
+DISTANCE_FAR_GUESS = 0
+GESTURE_FADE_DURATION = 0.6 # seconds
+DISTANCE_GESTURE_THRESH = 330
 VOLUME_MEM = 10
+DISTANCE_MEM = 10
 
 class Processor(object):
     command_states = {
@@ -27,7 +32,12 @@ class Processor(object):
     def __init__(self, arduino_state):
         self.volume = RollingNumber(EXPECTED_VOLUME_ZERO, VOLUME_MEM)
         self.volume_min = float('inf')
+        self.distance = RollingNumber(DISTANCE_FAR_GUESS, DISTANCE_MEM)
         self.arduino_state = arduino_state
+
+        self.last_gesture_time = time.time() - 2 * GESTURE_FADE_DURATION
+
+        self.in_command_mode = False
 
     def set_interval(func, milliseconds):
         def func_wrapper():
@@ -62,7 +72,7 @@ class Processor(object):
         if newdata['type'] == 'audio-volume':
             vol = self.volume
             vol.record(dval)
-            self.volume_min = min(self.volume_min, dval)
+            self.volume_min = min(self.volume_min, vol.avg())
             delta = vol.avg() - self.volume_min
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
@@ -72,12 +82,31 @@ class Processor(object):
             led_hue = light_val
             led_sat = light_val
             led_val = light_val
+        elif newdata['type'] == 'distance':
+            self.distance.record(dval)
         elif newdata['type'] == 'command':
             print "received command: " + newdata['value']
             return self.command_states[dval]
+        elif newdata['type'] == 'command-mode':
+            if dval == 'on':
+                self.in_command_mode = True
+            else:
+                self.in_command_mode = False
+
+        # just keep doing what you're doing if in command mode.
+        if self.in_command_mode:
+            return last_state
+
+        # record gesture
+        if self.distance.avg() > DISTANCE_GESTURE_THRESH:
+            self.last_gesture_time = time.time()
+
+        # act on gesture
+        if time.time() - self.last_gesture_time < GESTURE_FADE_DURATION:
+            pump_power += 1
 
         # rotate hue
-        led_hue = (led_hue + 0.0001) % 1.0
+        led_hue = (time.time() / 20) % 1
 
         # bound brightness
         led_val = min(led_val, 1.0)
@@ -93,6 +122,10 @@ class Processor(object):
         print "vol max*: {}".format(self.volume.max() - EXPECTED_VOLUME_ZERO)
         print "vol var : {}".format(self.volume.variance())
         print "vol lst*: {}".format(self.volume.last() - EXPECTED_VOLUME_ZERO)
+        print "vol globmin: {}".format(self.volume_min)
+        print "dist avg: {}".format(self.distance.avg())
+        print "last gesture: {}".format(self.last_gesture_time)
+        print "time since gesture: {}".format(time.time() - self.last_gesture_time)
 
 
 def maprange(x, in_min, in_max, out_min, out_max):
