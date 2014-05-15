@@ -77,7 +77,6 @@ class Processor(object):
             pump_power = delta / EXPECTED_VOLUME_DELTA
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
         elif newdata['type'] == 'light-intensity':
-            print "light intensity: " + str(dval)
             light_val = maprange(dval, 800, 0, 0, 1)
             led_hue = light_val
             led_sat = light_val
@@ -88,10 +87,7 @@ class Processor(object):
             print "received command: " + newdata['value']
             return self.command_states[dval]
         elif newdata['type'] == 'command-mode':
-            if dval == 'on':
-                self.in_command_mode = True
-            else:
-                self.in_command_mode = False
+            self.in_command_mode = (dval == 'true')
 
         # just keep doing what you're doing if in command mode.
         if self.in_command_mode:
@@ -126,6 +122,7 @@ class Processor(object):
         print "dist avg: {}".format(self.distance.avg())
         print "last gesture: {}".format(self.last_gesture_time)
         print "time since gesture: {}".format(time.time() - self.last_gesture_time)
+        print "command mode: {}".format(self.in_command_mode)
 
 
 def maprange(x, in_min, in_max, out_min, out_max):
