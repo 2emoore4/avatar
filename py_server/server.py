@@ -74,6 +74,7 @@ def write_to_arduino(state):
             arduino_serial.write('*')
             for val in state:
                 arduino_serial.write(convert_float_letter(val))
+            arduino_serial.flush()
         except serial.SerialException as ex:
             print ex
             traceback.print_exc()
