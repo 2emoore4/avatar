@@ -42,7 +42,7 @@ arduino_state = AtomicReference(ArduinoState(pump_power=0, ledR=0, ledG=0, ledB=
 # data processor (not threadsafe)
 # the processor stores persistent data and figures out how
 # to turn data received into an output state
-processor = Processor()
+processor = Processor(arduino_state)
 
 # a list of known substrings of serial addresses to try to connect to.
 # if None, then skip connecting

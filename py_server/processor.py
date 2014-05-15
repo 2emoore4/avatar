@@ -4,7 +4,7 @@ from colorsys import hsv_to_rgb, rgb_to_hsv
 from arduinostate import ArduinoState
 
 EXPECTED_VOLUME_ZERO = -155 # basically zero-sound value
-EXPECTED_VOLUME_DELTA = 6 # roughly maximum volume change expected
+EXPECTED_VOLUME_DELTA = 15 # roughly maximum volume change expected
 VOLUME_MEM = 10
 
 class Processor(object):
@@ -24,9 +24,10 @@ class Processor(object):
     Interprets and massages data from inputs to format outputs.
     This is a class because it can include persistent storage.
     """
-    def __init__(self):
+    def __init__(self, arduino_state):
         self.volume = RollingNumber(EXPECTED_VOLUME_ZERO, VOLUME_MEM)
         self.volume_min = float('inf')
+        self.arduino_state = arduino_state
 
     def set_interval(func, milliseconds):
         def func_wrapper():
@@ -67,16 +68,12 @@ class Processor(object):
             # pump_power = maprange(vol.last(), vol.min(), vol.max(), 0, 1)
         elif newdata['type'] == 'light-intensity':
             light_val = maprange(dval, 800, 0, 0, 1)
-            ledR = light_val
-            ledG = light_val
-            ledB = light_val
+            led_hue = light_val
+            led_sat = light_val
+            led_val = light_val
         elif newdata['type'] == 'command':
             print "received command: " + newdata['value']
             return self.command_states[dval]
-
-        # led tracks pump power
-        led_val = pump_power
-        led_sat = 1
 
         # rotate hue
         led_hue = (led_hue + 0.0001) % 1.0
