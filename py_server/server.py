@@ -93,6 +93,8 @@ def process_data_thread():
             if DEBUG_PROCESSOR: print "-- frame --"
             if DEBUG_PROCESSOR: processor.debug_print()
             if DEBUG_PROCESSOR: print newstate
+            # enforce bounds
+            newstate = ArduinoState(*(max(0, min(val, 1)) for val in newstate))
         except Exception as ex:
             print ex
             traceback.print_exc()
