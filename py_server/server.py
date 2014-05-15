@@ -22,7 +22,7 @@ from atomicreference import AtomicReference
 from arduinostate import ArduinoState
 from processor import Processor
 
-DEBUG_NET_COMM = True
+DEBUG_NET_COMM = False
 DEBUG_ARDUINO_COMM = False
 DEBUG_PROCESSOR = True
 
